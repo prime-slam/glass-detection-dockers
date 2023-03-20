@@ -1,4 +1,10 @@
+torch
+torchvision
 Cython
-scikit-image==0.16.2
+pillow
+scikit-image
 xlwt
 tqdm
+numpy
+pydensecrf
+scikit-learn
