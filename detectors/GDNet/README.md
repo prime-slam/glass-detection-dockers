@@ -1,5 +1,7 @@
 # CVPR2020_GDNet
 
+Original Repository: 
+
 ## Don't Hit Me! Glass Detection in Real-world Scenes
 [Haiyang Mei](https://mhaiyang.github.io/), Xin Yang, Yang Wang, Yuanyuan Liu, Shengfeng He, Qiang Zhang, Xiaopeng Wei, and Rynson W.H. Lau
 
@@ -21,38 +23,62 @@ If you use this code or our dataset (including test set), please cite:
 }
 ```
 
+## Installation
+Clone this repository recursively (to clone the dss_crf submodule as well):
+```
+git clone --recurse-submodules https://github.com/prime-slam/glass-detection-dockers.git
+cd glass-detection-dockers/detectors/GDNet
+```
+
+Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#install-guide) for GPU support.
+(You can omit this step if you intend to run the algorithm only on CPU)
+
+Then you need to build a docker image:
+```
+docker build -t gdnet .
+```
+
+
+## Usage
+### Predicting
+- INPUT_DIR should contain target images.
+- OUTPUT_DIR will store the generated masks and log.
+
+Running the docker image:
+```
+docker run --rm --gpus all \
+-v INPUT_DIR:/detector/input \
+-v OUTPUT_DIR:/detector/output \
+gdnet
+```
+### Predicting and Evaluating metrics.
+- INPUT_DIR should contain target images.
+- OUTPUT_DIR will store the generated masks, log and calculated metrics for each image.
+- GT_DIR should contain ground truth grayscale/binary masks, each should have the **same name** as the corresponding image in INPUT_DIR.
+
+Running the docker image:
+```
+docker run --rm --gpus all \
+-v INPUT_DIR:/detector/input \
+-v OUTPUT_DIR:/detector/output \
+-v GT_DIR:/detector/ground_truth \
+gdnet
+```
+
+To run the model on CPU instead of GPU, omit the `--gpus all` flag.
+
+
+## Miscellaneous
 ### Dataset
 See [Peoject Page](https://mhaiyang.github.io/CVPR2020_GDNet/index.html)
 
-### Requirements
-* PyTorch == 1.0.0
-* TorchVision == 0.2.1
-* CUDA 10.0  cudnn 7.2
-* Setup
-```
-sudo pip3 install -r requirements.txt
-git clone https://github.com/Mhaiyang/dss_crf.git
-sudo python setup.py install
-```
 
 ### Test
-Download trained model `GDNet.pth` at [here](https://mhaiyang.github.io/CVPR2020_GDNet/index.html), then run `infer.py`.
-
-<!-- ### Experimental Results -->
-
-<!-- ##### Quantitative Results -->
-<!-- <img src="https://github.com/Mhaiyang/CVPR2020_GDNet/blob/master/assets/table1.png" width="60%" height="60%"> -->
-
-
-<!-- ##### Component analysis -->
-<!-- <img src="https://github.com/Mhaiyang/CVPR2020_GDNet/blob/master/assets/table2.png" width="60%" height="60%"> -->
-
-
-<!-- ##### Qualitative Results -->
-<!-- <img src="https://github.com/Mhaiyang/CVPR2020_GDNet/blob/master/assets/results.png" width="100%" height="100%"> -->
+If you intend to run the project without docker, download trained model `GDNet.pth` at [here](https://mhaiyang.github.io/CVPR2020_GDNet/index.html), then run `infer.py`.
 
 ### License
 Please see `license.txt`
 
 ### Contact
-E-Mail: mhy666@mail.dlut.edu.cn
+Original Repository Author E-Mail: mhy666@mail.dlut.edu.cn \
+Current Repository Author E-Mail: kiselev.0353@gmail.com
