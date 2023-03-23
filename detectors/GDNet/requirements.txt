@@ -1,10 +1,9 @@
-torch
-torchvision
 Cython
-pillow
+torch~=1.0.1
+torchvision~=0.2.2
 scikit-image
+scikit-learn
+pillow
 xlwt
 tqdm
 numpy
-pydensecrf
-scikit-learn
