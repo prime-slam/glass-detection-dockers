@@ -14,21 +14,21 @@ and expected to return a `nn.Module` object.
 """
 
 
-def get_segmentation_model():
+def get_segmentation_model(device):
     """
     Built the whole model, defined by `cfg.MODEL.META_ARCHITECTURE`.
     """
     model_name = cfg.MODEL.MODEL_NAME
     model = MODEL_REGISTRY.get(model_name)()
-    load_model_pretrain(model)
+    load_model_pretrain(model, device)
     return model
 
 
-def load_model_pretrain(model):
+def load_model_pretrain(model, device):
     if cfg.PHASE == 'train':
         if cfg.TRAIN.PRETRAINED_MODEL_PATH:
             logging.info('load pretrained model from {}'.format(cfg.TRAIN.PRETRAINED_MODEL_PATH))
-            state_dict_to_load = torch.load(cfg.TRAIN.PRETRAINED_MODEL_PATH)
+            state_dict_to_load = torch.load(cfg.TRAIN.PRETRAINED_MODEL_PATH, map_location=torch.device(device))
             keys_wrong_shape = []
             state_dict_suitable = OrderedDict()
             state_dict = model.state_dict()
@@ -43,5 +43,5 @@ def load_model_pretrain(model):
     else:
         if cfg.TEST.TEST_MODEL_PATH:
             logging.info('load test model from {}'.format(cfg.TEST.TEST_MODEL_PATH))
-            msg = model.load_state_dict(torch.load(cfg.TEST.TEST_MODEL_PATH), strict=False)
+            msg = model.load_state_dict(torch.load(cfg.TEST.TEST_MODEL_PATH, map_location=torch.device(device)), strict=False)
             logging.info(msg)

@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 import torch.nn.functional as F
+from tqdm import tqdm
 
 from tabulate import tabulate
 from torchvision import transforms
@@ -55,7 +56,7 @@ class Evaluator(object):
                                           pin_memory=True)
         self.classes = val_dataset.classes
         # create network
-        self.model = get_segmentation_model().to(self.device)
+        self.model = get_segmentation_model(self.device).to(self.device)
 
         if hasattr(self.model, 'encoder') and cfg.MODEL.BN_EPS_FOR_ENCODER:
                 logging.info('set bn custom eps for bn in encoder: {}'.format(cfg.MODEL.BN_EPS_FOR_ENCODER))
@@ -80,7 +81,7 @@ class Evaluator(object):
         else:
             model = self.model
 
-        for i, (image, _, filename) in enumerate(self.val_loader):
+        for (image, _, filename) in tqdm(self.val_loader):
             image = image.to(self.device)
             filename = filename[0]
             save_name = os.path.basename(filename).replace('.jpg', '').replace('.png', '')
@@ -99,7 +100,7 @@ class Evaluator(object):
                 makedirs(save_path)
                 cv2.imwrite(os.path.join(save_path, '{}_glass.png'.format(save_name)), glass_res)
                 # cv2.imwrite(os.path.join(save_path, '{}_boundary.png'.format(save_name)), boundary_res)
-                print('save {}'.format(save_name))
+                # print('save {}'.format(save_name))
 
 
 

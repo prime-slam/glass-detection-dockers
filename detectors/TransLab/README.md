@@ -19,6 +19,10 @@ For downloading the data, you can refer to [Trans10K Website](https://xieenze.gi
 ```
 python setup.py develop
 ```
+If experiencing problems running it in MacOS (`Python.h` not found), try installing with:
+```
+CPLUS_INCLUDE_PATH="$(find / -name "Python.h" -print 2>/dev/null -quit | sed "s|/[^/]*$||")" python setup.py develop
+```
 ## Pretrained Models and Logs
 We provide the trained models and logs for TransLab.
 [Google Drive](https://drive.google.com/drive/folders/1yJMEB4rNKIZt5IWL13Nn-YwckrvAPNuz?usp=sharing)
