@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     NetworkRunner(
         input_dir=args.input_dir,
-        output_dir=args.output_dir,
+        output_dir=args.output_dir / "masks",
         log_path=args.output_dir / "log.txt",
         model_path=args.pretrained_model_path,
         segmentron_args=segmentron_args

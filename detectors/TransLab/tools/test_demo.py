@@ -29,9 +29,10 @@ import cv2
 import numpy as np
 
 class Evaluator(object):
-    def __init__(self, args):
+    def __init__(self, args, netrunner):
         self.args = args
         self.device = torch.device(args.device)
+        self.netrunner = netrunner
 
         # image transform
         input_transform = transforms.Compose([
@@ -97,6 +98,7 @@ class Evaluator(object):
                 # boundary_res = cv2.resize(boundary_res, (w, h), interpolation=cv2.INTER_NEAREST)
 
                 save_path = os.path.join('/'.join(cfg.DEMO_DIR.split('/')[:-2]), 'result')
+                save_path = self.netrunner.output_dir
                 makedirs(save_path)
                 cv2.imwrite(os.path.join(save_path, '{}_glass.png'.format(save_name)), glass_res)
                 # cv2.imwrite(os.path.join(save_path, '{}_boundary.png'.format(save_name)), boundary_res)

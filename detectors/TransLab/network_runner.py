@@ -35,7 +35,7 @@ class NetworkRunner(NetworkRunnerBase):
         sys.argv = [__file__] + segmentron_args
         args = options.parse_args()
         default_setup(args)
-        self.evaluator = Evaluator(args)
+        self.evaluator = Evaluator(args, self)
 
     def run(self):
         self.evaluator.eval()
