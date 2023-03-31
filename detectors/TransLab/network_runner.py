@@ -1,51 +1,37 @@
 from __future__ import print_function
-import os
-import sys
-
-from pathlib import Path
-
-from common.network_runner_base import NetworkRunnerBase
-from segmentron.utils import options
-from segmentron.utils.default_setup import default_setup
-from segmentron.config import cfg
 
 import os
 import sys
-
-cur_path = os.path.abspath(os.path.dirname(__file__))
-root_path = os.path.split(cur_path)[0]
-sys.path.append(root_path)
-
+import cv2
 import logging
 import torch
 import torch.nn as nn
 import torch.utils.data as data
-import torch.nn.functional as F
-from tqdm import tqdm
 
-from tabulate import tabulate
+from pathlib import Path
+from common.network_runner_base import NetworkRunnerBase
+from segmentron.utils import options
+from tqdm import tqdm
 from torchvision import transforms
+
 from segmentron.data.dataloader import get_segmentation_dataset
 from segmentron.models.model_zoo import get_segmentation_model
-from segmentron.utils.distributed import synchronize, make_data_sampler, make_batch_data_sampler
+from segmentron.utils.distributed import (
+    make_data_sampler,
+    make_batch_data_sampler,
+)
 from segmentron.config import cfg
-from segmentron.utils.options import parse_args
 from segmentron.utils.default_setup import default_setup
-from IPython import embed
-from collections import OrderedDict
-from segmentron.utils.filesystem import makedirs
-import cv2
-import numpy as np
 
 
 class NetworkRunner(NetworkRunnerBase):
     def __init__(
-            self,
-            input_dir: Path,
-            output_dir: Path,
-            log_path: Path,
-            model_path: Path,
-            segmentron_args
+        self,
+        input_dir: Path,
+        output_dir: Path,
+        log_path: Path,
+        model_path: Path,
+        segmentron_args,
     ):
         super().__init__(input_dir, output_dir, log_path, model_path)
 
@@ -54,10 +40,10 @@ class NetworkRunner(NetworkRunnerBase):
 
         cfg.TEST.TEST_MODEL_PATH = str(model_path)
         cfg.DEMO_DIR = str(input_dir)
-        cfg.update_from_file('configs/trans10K/translab.yaml')
-        cfg.PHASE = 'test'
+        cfg.update_from_file("configs/trans10K/translab.yaml")
+        cfg.PHASE = "test"
         cfg.ROOT_PATH = root_path
-        cfg.DATASET.NAME = 'trans10k_extra'
+        cfg.DATASET.NAME = "trans10k_extra"
         cfg.check_and_freeze()
 
         sys.argv = [__file__] + segmentron_args
@@ -68,38 +54,57 @@ class NetworkRunner(NetworkRunnerBase):
         self.device = torch.device(args.device)
 
         # image transform
-        input_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(cfg.DATASET.MEAN, cfg.DATASET.STD),
-        ])
+        input_transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(cfg.DATASET.MEAN, cfg.DATASET.STD),
+            ]
+        )
 
         # dataset and dataloader
-        val_dataset = get_segmentation_dataset(cfg.DATASET.NAME,
-                                               root=cfg.DEMO_DIR,
-                                               split='val',
-                                               mode='val',
-                                               transform=input_transform,
-                                               base_size=cfg.TRAIN.BASE_SIZE)
+        val_dataset = get_segmentation_dataset(
+            cfg.DATASET.NAME,
+            root=cfg.DEMO_DIR,
+            split="val",
+            mode="val",
+            transform=input_transform,
+            base_size=cfg.TRAIN.BASE_SIZE,
+        )
 
-        val_sampler = make_data_sampler(val_dataset, shuffle=False, distributed=args.distributed)
-        val_batch_sampler = make_batch_data_sampler(val_sampler, images_per_batch=cfg.TEST.BATCH_SIZE, drop_last=False)
+        val_sampler = make_data_sampler(
+            val_dataset, shuffle=False, distributed=args.distributed
+        )
+        val_batch_sampler = make_batch_data_sampler(
+            val_sampler, images_per_batch=cfg.TEST.BATCH_SIZE, drop_last=False
+        )
 
-        self.val_loader = data.DataLoader(dataset=val_dataset,
-                                          batch_sampler=val_batch_sampler,
-                                          num_workers=cfg.DATASET.WORKERS,
-                                          pin_memory=True)
+        self.val_loader = data.DataLoader(
+            dataset=val_dataset,
+            batch_sampler=val_batch_sampler,
+            num_workers=cfg.DATASET.WORKERS,
+            pin_memory=True,
+        )
         self.classes = val_dataset.classes
         # create network
         self.model = get_segmentation_model(self.device).to(self.device)
 
-        if hasattr(self.model, 'encoder') and cfg.MODEL.BN_EPS_FOR_ENCODER:
-            logging.info('set bn custom eps for bn in encoder: {}'.format(cfg.MODEL.BN_EPS_FOR_ENCODER))
-            self.set_batch_norm_attr(self.model.encoder.named_modules(), 'eps', cfg.MODEL.BN_EPS_FOR_ENCODER)
+        if hasattr(self.model, "encoder") and cfg.MODEL.BN_EPS_FOR_ENCODER:
+            logging.info(
+                "set bn custom eps for bn in encoder: {}".format(
+                    cfg.MODEL.BN_EPS_FOR_ENCODER
+                )
+            )
+            self.set_batch_norm_attr(
+                self.model.encoder.named_modules(), "eps", cfg.MODEL.BN_EPS_FOR_ENCODER
+            )
 
         if args.distributed:
-            self.model = nn.parallel.DistributedDataParallel(self.model,
-                                                             device_ids=[args.local_rank],
-                                                             output_device=args.local_rank, find_unused_parameters=True)
+            self.model = nn.parallel.DistributedDataParallel(
+                self.model,
+                device_ids=[args.local_rank],
+                output_device=args.local_rank,
+                find_unused_parameters=True,
+            )
 
         self.model.to(self.device)
         self.count_easy = 0
@@ -116,10 +121,12 @@ class NetworkRunner(NetworkRunnerBase):
                 setattr(m[1], attr, value)
 
     def run(self):
-        for (image, _, filename) in tqdm(self.val_loader):
+        for image, _, filename in tqdm(self.val_loader):
             image = image.to(self.device)
             filename = filename[0]
-            save_name = os.path.basename(filename).replace('.jpg', '').replace('.png', '')
+            save_name = (
+                os.path.basename(filename).replace(".jpg", "").replace(".png", "")
+            )
 
             ori_img, size = self._read_img(filename)
 
@@ -130,7 +137,7 @@ class NetworkRunner(NetworkRunnerBase):
         with torch.no_grad():
             output, output_boundary = self.model.evaluate(img)
 
-            glass_res = output.argmax(1)[0].data.cpu().numpy().astype('uint8') * 127
+            glass_res = output.argmax(1)[0].data.cpu().numpy().astype("uint8") * 127
             glass_res = cv2.resize(glass_res, size, interpolation=cv2.INTER_NEAREST)
         return glass_res
 
@@ -141,7 +148,9 @@ class NetworkRunner(NetworkRunnerBase):
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
-        cv2.imwrite(os.path.join(save_path, '{}_glass.png'.format(img_name)), prediction)
+        cv2.imwrite(
+            os.path.join(save_path, "{}_glass.png".format(img_name)), prediction
+        )
 
     def _load_model(self, model_path):
         pass
