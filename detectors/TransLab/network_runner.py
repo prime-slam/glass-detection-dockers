@@ -9,7 +9,6 @@ from segmentron.utils import options
 from segmentron.utils.default_setup import default_setup
 from segmentron.config import cfg
 
-
 import os
 import sys
 
@@ -41,12 +40,12 @@ import numpy as np
 
 class NetworkRunner(NetworkRunnerBase):
     def __init__(
-        self,
-        input_dir: Path,
-        output_dir: Path,
-        log_path: Path,
-        model_path: Path,
-        segmentron_args
+            self,
+            input_dir: Path,
+            output_dir: Path,
+            log_path: Path,
+            model_path: Path,
+            segmentron_args
     ):
         super().__init__(input_dir, output_dir, log_path, model_path)
 
@@ -106,39 +105,39 @@ class NetworkRunner(NetworkRunnerBase):
         self.count_easy = 0
         self.count_hard = 0
 
+        self.model.eval()
+
+        if self.args.distributed:
+            self.model = self.model.module
+
     def set_batch_norm_attr(self, named_modules, attr, value):
         for m in named_modules:
             if isinstance(m[1], nn.BatchNorm2d) or isinstance(m[1], nn.SyncBatchNorm):
                 setattr(m[1], attr, value)
 
     def run(self):
-        self.model.eval()
-        if self.args.distributed:
-            model = self.model.module
-        else:
-            model = self.model
-
         for (image, _, filename) in tqdm(self.val_loader):
             image = image.to(self.device)
             filename = filename[0]
             save_name = os.path.basename(filename).replace('.jpg', '').replace('.png', '')
 
-            ori_img = cv2.imread(filename)
+            ori_img, size = self._read_img(filename)
 
-            with torch.no_grad():
-                output, output_boundary = model.evaluate(image)
-                h, w, _ = ori_img.shape
-
-                glass_res = output.argmax(1)[0].data.cpu().numpy().astype('uint8') * 127
-                glass_res = cv2.resize(glass_res, (w, h), interpolation=cv2.INTER_NEAREST)
-
+            glass_res = self._predict(image, size)
             self._write_img(save_name, glass_res)
 
-    def _predict(self, img, meta):
-        pass
+    def _predict(self, img, size):
+        with torch.no_grad():
+            output, output_boundary = self.model.evaluate(img)
+
+            glass_res = output.argmax(1)[0].data.cpu().numpy().astype('uint8') * 127
+            glass_res = cv2.resize(glass_res, size, interpolation=cv2.INTER_NEAREST)
+        return glass_res
 
     def _read_img(self, img_name):
-        pass
+        ori_img = cv2.imread(img_name)
+        h, w, _ = ori_img.shape
+        return ori_img, (w, h)
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
