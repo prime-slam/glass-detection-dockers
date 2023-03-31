@@ -33,7 +33,6 @@ class NetworkRunner(NetworkRunnerBase):
         model_path: Path,
         segmentron_args,
     ):
-        super().__init__(input_dir, output_dir, log_path, model_path)
 
         root_path = os.path.abspath(os.path.dirname(__file__))
         sys.path.append(root_path)
@@ -53,67 +52,8 @@ class NetworkRunner(NetworkRunnerBase):
         self.args = args
         self.device = torch.device(args.device)
 
-        # image transform
-        input_transform = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(cfg.DATASET.MEAN, cfg.DATASET.STD),
-            ]
-        )
+        super().__init__(input_dir, output_dir, log_path, model_path)
 
-        # dataset and dataloader
-        val_dataset = get_segmentation_dataset(
-            cfg.DATASET.NAME,
-            root=cfg.DEMO_DIR,
-            split="val",
-            mode="val",
-            transform=input_transform,
-            base_size=cfg.TRAIN.BASE_SIZE,
-        )
-
-        val_sampler = make_data_sampler(
-            val_dataset, shuffle=False, distributed=args.distributed
-        )
-        val_batch_sampler = make_batch_data_sampler(
-            val_sampler, images_per_batch=cfg.TEST.BATCH_SIZE, drop_last=False
-        )
-
-        self.val_loader = data.DataLoader(
-            dataset=val_dataset,
-            batch_sampler=val_batch_sampler,
-            num_workers=cfg.DATASET.WORKERS,
-            pin_memory=True,
-        )
-        self.classes = val_dataset.classes
-        # create network
-        self.model = get_segmentation_model(self.device).to(self.device)
-
-        if hasattr(self.model, "encoder") and cfg.MODEL.BN_EPS_FOR_ENCODER:
-            logging.info(
-                "set bn custom eps for bn in encoder: {}".format(
-                    cfg.MODEL.BN_EPS_FOR_ENCODER
-                )
-            )
-            self.set_batch_norm_attr(
-                self.model.encoder.named_modules(), "eps", cfg.MODEL.BN_EPS_FOR_ENCODER
-            )
-
-        if args.distributed:
-            self.model = nn.parallel.DistributedDataParallel(
-                self.model,
-                device_ids=[args.local_rank],
-                output_device=args.local_rank,
-                find_unused_parameters=True,
-            )
-
-        self.model.to(self.device)
-        self.count_easy = 0
-        self.count_hard = 0
-
-        self.model.eval()
-
-        if self.args.distributed:
-            self.model = self.model.module
 
     def set_batch_norm_attr(self, named_modules, attr, value):
         for m in named_modules:
@@ -153,4 +93,64 @@ class NetworkRunner(NetworkRunnerBase):
         )
 
     def _load_model(self, model_path):
-        pass
+        # image transform
+        input_transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(cfg.DATASET.MEAN, cfg.DATASET.STD),
+            ]
+        )
+
+        # dataset and dataloader
+        val_dataset = get_segmentation_dataset(
+            cfg.DATASET.NAME,
+            root=cfg.DEMO_DIR,
+            split="val",
+            mode="val",
+            transform=input_transform,
+            base_size=cfg.TRAIN.BASE_SIZE,
+        )
+
+        val_sampler = make_data_sampler(
+            val_dataset, shuffle=False, distributed=self.args.distributed
+        )
+        val_batch_sampler = make_batch_data_sampler(
+            val_sampler, images_per_batch=cfg.TEST.BATCH_SIZE, drop_last=False
+        )
+
+        self.val_loader = data.DataLoader(
+            dataset=val_dataset,
+            batch_sampler=val_batch_sampler,
+            num_workers=cfg.DATASET.WORKERS,
+            pin_memory=True,
+        )
+        self.classes = val_dataset.classes
+        # create network
+        self.model = get_segmentation_model(self.device).to(self.device)
+
+        if hasattr(self.model, "encoder") and cfg.MODEL.BN_EPS_FOR_ENCODER:
+            logging.info(
+                "set bn custom eps for bn in encoder: {}".format(
+                    cfg.MODEL.BN_EPS_FOR_ENCODER
+                )
+            )
+            self.set_batch_norm_attr(
+                self.model.encoder.named_modules(), "eps", cfg.MODEL.BN_EPS_FOR_ENCODER
+            )
+
+        if self.args.distributed:
+            self.model = nn.parallel.DistributedDataParallel(
+                self.model,
+                device_ids=[self.args.local_rank],
+                output_device=self.args.local_rank,
+                find_unused_parameters=True,
+            )
+
+        self.model.to(self.device)
+        self.count_easy = 0
+        self.count_hard = 0
+
+        self.model.eval()
+
+        if self.args.distributed:
+            self.model = self.model.module
