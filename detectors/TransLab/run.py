@@ -31,7 +31,7 @@ if __name__ == "__main__":
         type=Path,
         default=None,
         help="Directory containing ground truth masks for input images."
-             "If specified, metrics for predictions are calculated.",
+        "If specified, metrics for predictions are calculated.",
     )
 
     args, segmentron_args = parser.parse_known_args()
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         output_dir=args.output_dir / "masks",
         log_path=args.output_dir / "log.txt",
         model_path=args.pretrained_model_path,
-        segmentron_args=segmentron_args
+        segmentron_args=segmentron_args,
     ).run()
 
     if args.ground_truth_dir:

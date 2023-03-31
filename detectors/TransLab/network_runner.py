@@ -24,6 +24,10 @@ from segmentron.config import cfg
 from segmentron.utils.default_setup import default_setup
 
 
+# TODO: separate dataset initialization from model initialization
+# TODO: fix running the algo so that it is not necessary to override parent `run` method
+
+
 class NetworkRunner(NetworkRunnerBase):
     def __init__(
         self,
@@ -33,7 +37,6 @@ class NetworkRunner(NetworkRunnerBase):
         model_path: Path,
         segmentron_args,
     ):
-
         root_path = os.path.abspath(os.path.dirname(__file__))
         sys.path.append(root_path)
 
@@ -53,7 +56,6 @@ class NetworkRunner(NetworkRunnerBase):
         self.device = torch.device(args.device)
 
         super().__init__(input_dir, output_dir, log_path, model_path)
-
 
     def set_batch_norm_attr(self, named_modules, attr, value):
         for m in named_modules:
