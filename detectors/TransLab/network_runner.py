@@ -65,36 +65,30 @@ class NetworkRunner(NetworkRunnerBase):
                 setattr(m[1], attr, value)
 
     def run(self):
-        for image, _, filename in tqdm(self.val_loader):
-            image = image.to(self.device)
-            filename = filename[0]
-            save_name = (
-                os.path.basename(filename).replace(".jpg", "").replace(".png", "")
-            )
+        for img, img_path, shape in tqdm(self._image_gen()):
+            self._write_img(img_path.name, self._predict(img, shape))
 
-            ori_img, size = self._read_img(filename)
+    def _image_gen(self):
+        for img, _, img_name in self.val_loader:
+            img_path = Path(img_name[0])
+            ori_img = cv2.imread(str(img_path))
+            h, w, _ = ori_img.shape
+            yield img, img_path, (w, h)
 
-            glass_res = self._predict(image, size)
-            self._write_img(save_name, glass_res)
-
-    def _predict(self, img, size):
+    def _predict(self, img, shape):
         with torch.no_grad():
             output, output_boundary = self.model.evaluate(img)
 
             glass_res = output.argmax(1)[0].data.cpu().numpy().astype("uint8") * 127
-            glass_res = cv2.resize(glass_res, size, interpolation=cv2.INTER_NEAREST)
+            glass_res = cv2.resize(glass_res, shape, interpolation=cv2.INTER_NEAREST)
         return glass_res
 
     def _read_img(self, img_name):
-        ori_img = cv2.imread(img_name)
-        h, w, _ = ori_img.shape
-        return ori_img, (w, h)
+        pass
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
-        cv2.imwrite(
-            os.path.join(save_path, "{}_glass.png".format(img_name)), prediction
-        )
+        cv2.imwrite(os.path.join(save_path, img_name), prediction)
 
     def _init_dataset(self):
         input_dir = self.input_dir
