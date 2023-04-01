@@ -57,7 +57,9 @@ class NetworkRunner(NetworkRunnerBase):
 
         super().__init__(input_dir, output_dir, log_path, model_path)
 
-    def set_batch_norm_attr(self, named_modules, attr, value):
+        self._init_dataset()
+
+    def _set_batch_norm_attr(self, named_modules, attr, value):
         for m in named_modules:
             if isinstance(m[1], nn.BatchNorm2d) or isinstance(m[1], nn.SyncBatchNorm):
                 setattr(m[1], attr, value)
@@ -94,7 +96,8 @@ class NetworkRunner(NetworkRunnerBase):
             os.path.join(save_path, "{}_glass.png".format(img_name)), prediction
         )
 
-    def _load_model(self, model_path):
+    def _init_dataset(self):
+        input_dir = self.input_dir
         # image transform
         input_transform = transforms.Compose(
             [
@@ -106,7 +109,7 @@ class NetworkRunner(NetworkRunnerBase):
         # dataset and dataloader
         val_dataset = get_segmentation_dataset(
             cfg.DATASET.NAME,
-            root=cfg.DEMO_DIR,
+            root=input_dir,
             split="val",
             mode="val",
             transform=input_transform,
@@ -127,6 +130,8 @@ class NetworkRunner(NetworkRunnerBase):
             pin_memory=True,
         )
         self.classes = val_dataset.classes
+
+    def _load_model(self, model_path):
         # create network
         self.model = get_segmentation_model(self.device).to(self.device)
 
@@ -136,7 +141,7 @@ class NetworkRunner(NetworkRunnerBase):
                     cfg.MODEL.BN_EPS_FOR_ENCODER
                 )
             )
-            self.set_batch_norm_attr(
+            self._set_batch_norm_attr(
                 self.model.encoder.named_modules(), "eps", cfg.MODEL.BN_EPS_FOR_ENCODER
             )
 
