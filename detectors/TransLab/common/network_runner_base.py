@@ -5,6 +5,7 @@
 
 import logging
 import time
+from typing import Tuple, Any
 
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -26,13 +27,8 @@ class NetworkRunnerBase(ABC):
         self._load_model(model_path)
 
     def run(self):
-        for img_path in tqdm(sorted(self.input_dir.iterdir())):
-            img, meta = self._read_img(img_path)
-            with self._Timer() as timer:
-                prediction = self._predict(img, meta)
-
-            logging.info(f"image {img_path.name} processed. elapsed {timer.elapsed} ns")
-            self._write_img(img_path.name, prediction)
+        for img, img_path, shape in tqdm(self._image_gen()):
+            self._write_img(img_path.name, self._predict(img, shape))
         logging.info("evaluation done")
 
     @abstractmethod
@@ -40,7 +36,7 @@ class NetworkRunnerBase(ABC):
         pass
 
     @abstractmethod
-    def _read_img(self, img_name):
+    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
         pass
 
     @abstractmethod

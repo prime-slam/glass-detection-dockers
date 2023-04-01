@@ -13,6 +13,7 @@ from common.network_runner_base import NetworkRunnerBase
 from segmentron.utils import options
 from tqdm import tqdm
 from torchvision import transforms
+from typing import Tuple, Any
 
 from segmentron.data.dataloader import get_segmentation_dataset
 from segmentron.models.model_zoo import get_segmentation_model
@@ -22,10 +23,6 @@ from segmentron.utils.distributed import (
 )
 from segmentron.config import cfg
 from segmentron.utils.default_setup import default_setup
-
-
-# TODO: separate dataset initialization from model initialization
-# TODO: fix running the algo so that it is not necessary to override parent `run` method
 
 
 class NetworkRunner(NetworkRunnerBase):
@@ -59,16 +56,7 @@ class NetworkRunner(NetworkRunnerBase):
 
         self._init_dataset()
 
-    def _set_batch_norm_attr(self, named_modules, attr, value):
-        for m in named_modules:
-            if isinstance(m[1], nn.BatchNorm2d) or isinstance(m[1], nn.SyncBatchNorm):
-                setattr(m[1], attr, value)
-
-    def run(self):
-        for img, img_path, shape in tqdm(self._image_gen()):
-            self._write_img(img_path.name, self._predict(img, shape))
-
-    def _image_gen(self):
+    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
         for img, _, img_name in self.val_loader:
             img_path = Path(img_name[0])
             ori_img = cv2.imread(str(img_path))
@@ -82,9 +70,6 @@ class NetworkRunner(NetworkRunnerBase):
             glass_res = output.argmax(1)[0].data.cpu().numpy().astype("uint8") * 127
             glass_res = cv2.resize(glass_res, shape, interpolation=cv2.INTER_NEAREST)
         return glass_res
-
-    def _read_img(self, img_name):
-        pass
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
@@ -125,8 +110,12 @@ class NetworkRunner(NetworkRunnerBase):
         )
         self.classes = val_dataset.classes
 
+    def _set_batch_norm_attr(self, named_modules, attr, value):
+        for m in named_modules:
+            if isinstance(m[1], nn.BatchNorm2d) or isinstance(m[1], nn.SyncBatchNorm):
+                setattr(m[1], attr, value)
+
     def _load_model(self, model_path):
-        # create network
         self.model = get_segmentation_model(self.device).to(self.device)
 
         if hasattr(self.model, "encoder") and cfg.MODEL.BN_EPS_FOR_ENCODER:
