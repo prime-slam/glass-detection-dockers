@@ -1,10 +1,14 @@
 FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
 
+ARG DETECTOR_DIR=TransLab
+
 WORKDIR /detector
 
-COPY . .
+COPY ../common common
 
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+COPY $DETECTOR_DIR .
+
+RUN apt-get update && apt-get install g++ ffmpeg libsm6 libxext6  -y
 
 RUN pip install -U pip && pip install --no-cache-dir gdown -r requirements.txt
 

@@ -11,7 +11,6 @@ import torch.utils.data as data
 from pathlib import Path
 from common.network_runner_base import NetworkRunnerBase
 from segmentron.utils import options
-from tqdm import tqdm
 from torchvision import transforms
 from typing import Tuple, Any
 
