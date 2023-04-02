@@ -4,7 +4,7 @@ ARG DETECTOR_DIR=GDNet
 
 WORKDIR /detector
 
-COPY ../common common
+COPY common common
 
 COPY $DETECTOR_DIR .
 

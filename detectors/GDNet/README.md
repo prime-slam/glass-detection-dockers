@@ -24,9 +24,9 @@ If you use this code or our dataset (including test set), please cite:
 ```
 
 ## Installation
-Clone this repository recursively (to clone the dss_crf submodule as well):
+Clone this repository:
 ```
-git clone --recurse-submodules https://github.com/prime-slam/glass-detection-dockers.git
+git clone https://github.com/prime-slam/glass-detection-dockers.git
 cd glass-detection-dockers/detectors/GDNet
 ```
 
@@ -35,7 +35,7 @@ Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-nati
 
 Then you need to build a docker image:
 ```
-docker build -t gdnet .
+docker build -t gdnet -f Dockerfile ..
 ```
 
 
