@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import os
 import sys
 import cv2
 import logging
@@ -33,8 +32,8 @@ class NetworkRunner(NetworkRunnerBase):
         model_path: Path,
         segmentron_args,
     ):
-        root_path = os.path.abspath(os.path.dirname(__file__))
-        sys.path.append(root_path)
+        root_path = Path(__file__).parent
+        sys.path.append(str(root_path))
 
         cfg.TEST.TEST_MODEL_PATH = str(model_path)
         cfg.DEMO_DIR = str(input_dir)
@@ -72,7 +71,7 @@ class NetworkRunner(NetworkRunnerBase):
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
-        cv2.imwrite(os.path.join(save_path, img_name), prediction)
+        cv2.imwrite(save_path / img_name, prediction)
 
     def _init_dataset(self):
         input_dir = self.input_dir
