@@ -8,7 +8,7 @@ For downloading the data, you can refer to [Trans10K Website](https://xieenze.gi
 Copy the repository and navigate to this directory
 ```shell
 git clone https://github.com/prime-slam/glass-detection-dockers.git
-cd detectors/TransLab
+cd glass-detection-dockers/detectors/TransLab
 ```
 Install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#install-guide) for GPU support.
 (You can omit this step if you intend to run the algorithm only on CPU)
