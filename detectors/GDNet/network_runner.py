@@ -11,6 +11,8 @@ from pathlib import Path
 from PIL import Image
 from torch.autograd import Variable
 from torchvision import transforms
+from typing import Tuple, Any
+from tqdm import tqdm
 
 from gdnet import GDNet
 from misc import crf_refine
@@ -74,6 +76,11 @@ class NetworkRunner(NetworkRunnerBase):
         self.net.load_state_dict(torch.load(model_path))
         logging.info("Loading model succeeded.")
         self.net.eval()
+
+    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
+        for img_path in sorted(self.input_dir.iterdir()):
+            img, (h, w) = self._read_img(img_path)
+            yield img, img_path, (w, h)
 
     def _read_img(self, img_path):
         logging.info(f"Image {img_path.name} read")
