@@ -8,7 +8,7 @@ COPY ../common common
 
 COPY $DETECTOR_DIR .
 
-RUN apt-get update && apt-get install g++ ffmpeg libsm6 libxext6  -y
+RUN apt-get update && apt-get install g++ ffmpeg libsm6 libxext6 -y
 
 RUN pip install -U pip && pip install --no-cache-dir gdown -r requirements.txt
 
