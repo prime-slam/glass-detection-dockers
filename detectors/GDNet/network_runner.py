@@ -17,6 +17,7 @@ from tqdm import tqdm
 from gdnet import GDNet
 from misc import crf_refine
 from common.network_runner_base import NetworkRunnerBase
+from common.input_image import InputImage
 
 
 class NetworkRunner(NetworkRunnerBase):
@@ -77,10 +78,10 @@ class NetworkRunner(NetworkRunnerBase):
         logging.info("Loading model succeeded.")
         self.net.eval()
 
-    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
+    def _image_gen(self) -> InputImage:
         for img_path in sorted(self.input_dir.iterdir()):
             img, (h, w) = self._read_img(img_path)
-            yield img, img_path, (w, h)
+            yield InputImage(img, img_path, w, h)
 
     def _read_img(self, img_path):
         logging.info(f"Image {img_path.name} read")
