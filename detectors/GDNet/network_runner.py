@@ -1,7 +1,16 @@
-#  @Date    : 2023-03-19
-#  @Editor  : Mikhail Kiselyov
-#  @E-mail  : kiselev.0353@gmail.com
-#  Provided as is
+# Copyright (c) 2022, Mikhail Kiselyov, Kirill Ivanov, Anastasiia Kornilova
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import logging
 import numpy as np
@@ -11,10 +20,13 @@ from pathlib import Path
 from PIL import Image
 from torch.autograd import Variable
 from torchvision import transforms
+from typing import Tuple, Any
+from tqdm import tqdm
 
 from gdnet import GDNet
 from misc import crf_refine
 from common.network_runner_base import NetworkRunnerBase
+from common.input_image import InputImage
 
 
 class NetworkRunner(NetworkRunnerBase):
@@ -74,6 +86,11 @@ class NetworkRunner(NetworkRunnerBase):
         self.net.load_state_dict(torch.load(model_path))
         logging.info("Loading model succeeded.")
         self.net.eval()
+
+    def _image_gen(self) -> InputImage:
+        for img_path in sorted(self.input_dir.iterdir()):
+            img, (h, w) = self._read_img(img_path)
+            yield InputImage(img, img_path, w, h)
 
     def _read_img(self, img_path):
         logging.info(f"Image {img_path.name} read")
