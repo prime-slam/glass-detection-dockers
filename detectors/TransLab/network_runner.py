@@ -14,17 +14,19 @@
 
 from __future__ import print_function
 
-import sys
 import cv2
 import logging
 import torch
 import torch.nn as nn
 import torch.utils.data as data
+import sys
 
 from pathlib import Path
-from segmentron.utils import options
 from torchvision import transforms
 
+from common.network_runner_base import NetworkRunnerBase
+from common.input_image import InputImage
+from segmentron.utils import options
 from segmentron.data.dataloader import get_segmentation_dataset
 from segmentron.models.model_zoo import get_segmentation_model
 from segmentron.utils.distributed import (
@@ -33,8 +35,6 @@ from segmentron.utils.distributed import (
 )
 from segmentron.config import cfg
 from segmentron.utils.default_setup import default_setup
-from common.network_runner_base import NetworkRunnerBase
-from common.input_image import InputImage
 
 
 class NetworkRunner(NetworkRunnerBase):
