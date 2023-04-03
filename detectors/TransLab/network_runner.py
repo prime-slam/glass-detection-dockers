@@ -22,10 +22,8 @@ import torch.nn as nn
 import torch.utils.data as data
 
 from pathlib import Path
-from common.network_runner_base import NetworkRunnerBase
 from segmentron.utils import options
 from torchvision import transforms
-from typing import Tuple, Any
 
 from segmentron.data.dataloader import get_segmentation_dataset
 from segmentron.models.model_zoo import get_segmentation_model
@@ -35,6 +33,8 @@ from segmentron.utils.distributed import (
 )
 from segmentron.config import cfg
 from segmentron.utils.default_setup import default_setup
+from common.network_runner_base import NetworkRunnerBase
+from common.input_image import InputImage
 
 
 class NetworkRunner(NetworkRunnerBase):
@@ -53,7 +53,7 @@ class NetworkRunner(NetworkRunnerBase):
         cfg.DEMO_DIR = str(input_dir)
         cfg.update_from_file("configs/trans10K/translab.yaml")
         cfg.PHASE = "test"
-        cfg.ROOT_PATH = root_path
+        cfg.ROOT_PATH = str(root_path)
         cfg.DATASET.NAME = "trans10k_extra"
         cfg.check_and_freeze()
 
@@ -68,12 +68,12 @@ class NetworkRunner(NetworkRunnerBase):
 
         self._init_dataset()
 
-    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
+    def _image_gen(self) -> InputImage:
         for img, _, img_name in self.val_loader:
             img_path = Path(img_name[0])
             ori_img = cv2.imread(str(img_path))
             h, w, _ = ori_img.shape
-            yield img, img_path, (w, h)
+            yield InputImage(img, img_path, w, h)
 
     def _predict(self, img, shape):
         with torch.no_grad():
@@ -85,7 +85,7 @@ class NetworkRunner(NetworkRunnerBase):
 
     def _write_img(self, img_name, prediction):
         save_path = self.output_dir
-        cv2.imwrite(save_path / img_name, prediction)
+        cv2.imwrite(str(save_path / img_name), prediction)
 
     def _init_dataset(self):
         input_dir = self.input_dir

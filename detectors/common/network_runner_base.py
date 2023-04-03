@@ -14,11 +14,12 @@
 
 import logging
 import time
-from typing import Tuple, Any
 
 from abc import ABC, abstractmethod
 from pathlib import Path
 from tqdm import tqdm
+
+from input_image import InputImage
 
 
 class NetworkRunnerBase(ABC):
@@ -36,8 +37,11 @@ class NetworkRunnerBase(ABC):
         self._load_model(model_path)
 
     def run(self):
-        for img, img_path, shape in tqdm(self._image_gen()):
-            self._write_img(img_path.name, self._predict(img, shape))
+        for input_img in tqdm(self._image_gen()):
+            self._write_img(
+                input_img.path.name,
+                self._predict(input_img.img, (input_img.w, input_img.h)),
+            )
         logging.info("evaluation done")
 
     @abstractmethod
@@ -45,7 +49,7 @@ class NetworkRunnerBase(ABC):
         pass
 
     @abstractmethod
-    def _image_gen(self) -> Tuple[Any, Path, Tuple[int, int]]:
+    def _image_gen(self) -> InputImage:
         pass
 
     @abstractmethod
