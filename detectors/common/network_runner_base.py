@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from tqdm import tqdm
 
-from input_image import InputImage
+from common.input_image import InputImage
 
 
 class NetworkRunnerBase(ABC):
