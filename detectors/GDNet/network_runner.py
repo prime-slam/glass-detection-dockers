@@ -60,12 +60,12 @@ class NetworkRunner(NetworkRunnerBase):
             if self.calculate_secondary:
                 f1 = f1.data.squeeze(0).cpu()
                 f2 = f2.data.squeeze(0).cpu()
-                f1 = np.array(transforms.Resize(size[::-1])(self.to_pil(f1)))
-                f2 = np.array(transforms.Resize(size[::-1])(self.to_pil(f2)))
+                f1 = np.array(transforms.Resize(size)(self.to_pil(f1)))
+                f2 = np.array(transforms.Resize(size)(self.to_pil(f2)))
             else:
                 f1 = f2 = None
             f3 = f3.data.squeeze(0).cpu()
-            f3 = np.array(transforms.Resize(size[::-1])(self.to_pil(f3)))
+            f3 = np.array(transforms.Resize(size)(self.to_pil(f3)))
 
             if self.do_crf_refine:
                 if self.calculate_secondary:
