@@ -45,7 +45,8 @@ docker run --rm --gpus all \
 -v INPUT_DIR:/detector/input \
 -v OUTPUT_DIR:/detector/output \
 -v GT_DIR:/detector/ground_truth \
-translab
+translab \
+--ground_truth_dir=/detector/ground_truth
 ```
 
 To run the model on CPU instead of GPU, omit the `--gpus all` flag.
