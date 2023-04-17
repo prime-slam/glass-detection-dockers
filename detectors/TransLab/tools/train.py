@@ -64,7 +64,7 @@ class Trainer(object):
 
 
         # create network
-        self.model = get_segmentation_model().to(self.device)
+        self.model = get_segmentation_model(self.device).to(self.device)
         # print params and flops
         if get_rank() == 0:
             try:
@@ -128,7 +128,7 @@ class Trainer(object):
         start_time = time.time()
         logging.info('Start training, Total Epochs: {:d} = Total Iterations {:d}'.format(epochs, max_iters))
 
-        self.model.train()
+        # self.model.train()
         iteration = self.start_epoch * iters_per_epoch if self.start_epoch > 0 else 0
         for (images, targets, boundary, _) in self.train_loader:
             epoch = iteration // iters_per_epoch + 1
