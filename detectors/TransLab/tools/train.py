@@ -115,6 +115,7 @@ class Trainer(object):
                                                              output_device=args.local_rank,
                                                              find_unused_parameters=True)
 
+        self.model.train()
         # # evaluation metrics
         # self.metric = SegmentationMetric(train_dataset.num_class, args.distributed)
         # self.best_pred = 0.0
@@ -128,9 +129,9 @@ class Trainer(object):
         start_time = time.time()
         logging.info('Start training, Total Epochs: {:d} = Total Iterations {:d}'.format(epochs, max_iters))
 
-        # self.model.train()
         iteration = self.start_epoch * iters_per_epoch if self.start_epoch > 0 else 0
         for (images, targets, boundary, _) in self.train_loader:
+            print('iter')
             epoch = iteration // iters_per_epoch + 1
             iteration += 1
 
