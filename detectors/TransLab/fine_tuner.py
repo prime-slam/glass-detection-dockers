@@ -1,14 +1,13 @@
-import os
 import sys
+
+from pathlib import Path
 
 from tools.train import Trainer
 from segmentron.utils.options import parse_args
 from segmentron.utils.default_setup import default_setup
 from segmentron.config import cfg
 
-
-cur_path = os.path.abspath(os.path.dirname(__file__))
-root_path = '/'.join(os.path.split(cur_path))
+root_path = str(Path.cwd().resolve())
 sys.path.append(root_path)
 
 
@@ -18,8 +17,6 @@ class FineTuner(Trainer):
         self.model.train(mode=False)
         self.model.head.train()
         self.model.head_b.train()
-        print('model loaded')
-
 
 
 if __name__ == '__main__':
@@ -35,5 +32,5 @@ if __name__ == '__main__':
     default_setup(args)
 
     # create a trainer and start train
-    trainer = FineTuner(args)
-    trainer.train()
+    fine_tuner = FineTuner(args)
+    fine_tuner.train()
